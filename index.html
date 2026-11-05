@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>for you</title>
+<meta name="theme-color" content="#020604">
+<style>
+@property --art  { syntax:'<color>'; inherits:true; initial-value:#7dffb0; }
+@property --leaf { syntax:'<color>'; inherits:true; initial-value:#2fd37a; }
+@property --txt  { syntax:'<color>'; inherits:true; initial-value:#39ff88; }
+@property --glow { syntax:'<color>'; inherits:true; initial-value:#00ff66; }
+@property --bg   { syntax:'<color>'; inherits:true; initial-value:#020604; }
+@property --scan { syntax:'<color>'; inherits:true; initial-value:#00ff66; }
+
+:root{
+  --art:#7dffb0; --leaf:#2fd37a; --txt:#39ff88; --glow:#00ff66; --bg:#020604; --scan:#00ff66;
+  --mono:"JetBrains Mono","IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  transition:--art .9s ease,--leaf .9s ease,--txt .9s ease,--glow .9s ease,--bg .9s ease,--scan .9s ease;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg);-webkit-text-size-adjust:100%}
+body{
+  background:var(--bg);color:var(--txt);font-family:var(--mono);font-weight:300;
+  overflow-x:hidden;min-height:100%;
+  padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);
+}
+/* phosphor bloom behind everything */
+.bloom{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 70% 55% at 50% 38%,color-mix(in srgb,var(--glow) 16%,transparent),transparent 70%);}
+
+.hero{position:relative;z-index:1;min-height:100svh;display:flex;flex-direction:column;align-items:center;
+  justify-content:space-between;padding:max(2vh,env(safe-area-inset-top)) 0 0;}
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;min-height:0}
+
+pre#art{
+  font-family:var(--mono);font-weight:400;white-space:pre;line-height:1;letter-spacing:0;
+  /* width-fit AND height-fit, whichever is smaller */
+  font-size:min(calc(96vw / (var(--cols) * .6)), calc(68svh / var(--rows)));
+  user-select:none;-webkit-user-select:none;
+}
+pre#art span.r{display:block;height:1em;visibility:hidden}
+pre#art span.r.on{visibility:visible}
+pre#art i{font-style:normal}
+pre#art i.f{color:var(--art);text-shadow:0 0 2px var(--art),0 0 7px var(--glow),0 0 18px color-mix(in srgb,var(--glow) 45%,transparent)}
+pre#art i.g{color:var(--leaf);text-shadow:0 0 2px var(--leaf),0 0 8px color-mix(in srgb,var(--glow) 50%,transparent)}
+pre#art span.r.boot{animation:boot .32s steps(2,end)}
+@keyframes boot{0%{opacity:1;filter:brightness(2.4)}35%{opacity:.25}60%{opacity:1;filter:brightness(1.6)}100%{opacity:1;filter:none}}
+
+.prompt{height:2.6rem;display:flex;align-items:center;font-size:.8rem;letter-spacing:.12em;color:var(--txt);
+  opacity:0;transition:opacity 1.6s ease,color .9s ease;text-shadow:0 0 6px var(--glow);}
+.prompt.show{opacity:.55}
+.prompt.gone{opacity:0!important;transition-duration:.9s}
+.cursor{display:inline-block;width:.6em;height:1em;margin-left:.35em;background:var(--txt);box-shadow:0 0 8px var(--glow);
+  animation:blink 1.1s steps(1) infinite;transition:background .9s ease}
+@keyframes blink{50%{opacity:0}}
+
+.swatches{display:flex;gap:6px;justify-content:center;padding:.2rem 0 max(1rem,env(safe-area-inset-bottom));}
+.sw{width:48px;height:48px;border:0;background:none;display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sw span{width:22px;height:22px;border-radius:50%;background:var(--c);box-shadow:0 0 10px var(--c);
+  outline:2px solid transparent;outline-offset:5px;transition:outline-color .3s,transform .3s,box-shadow .3s}
+.sw:hover span{transform:scale(1.12)}
+.sw[aria-checked="true"] span{outline-color:var(--c);box-shadow:0 0 14px var(--c),0 0 28px var(--c)}
+.sw:focus-visible span{outline-color:#fff}
+
+.letter{position:relative;z-index:1;min-height:100svh;display:grid;place-items:center;padding:12vh 6vw 18vh;text-align:center}
+.letter h2{font-weight:200;font-size:clamp(2.4rem,11vw,6.5rem);letter-spacing:.04em;line-height:1.15;color:var(--txt);
+  text-shadow:0 0 3px var(--txt),0 0 14px var(--glow),0 0 42px color-mix(in srgb,var(--glow) 55%,transparent);
+  min-height:1.2em;}
+.letter h2 .ch{opacity:0;display:inline-block;transform:translateY(.25em);transition:opacity .5s ease,transform .7s ease}
+.letter h2.in .ch{opacity:1;transform:none}
+.letter .sub{margin-top:2.2rem;font-size:.8rem;letter-spacing:.3em;opacity:0;transition:opacity 2s ease 2.4s;color:var(--txt);text-shadow:0 0 6px var(--glow)}
+.letter .sub.in{opacity:.5}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ---- CRT overlay stack: above content, never blocks taps ---- */
+.crt{position:fixed;inset:0;pointer-events:none;z-index:50}
+.scan{background:repeating-linear-gradient(to bottom,color-mix(in srgb,var(--scan) 7%,transparent) 0,color-mix(in srgb,var(--scan) 7%,transparent) 1px,transparent 1px,transparent 3px);mix-blend-mode:screen}
+.sweep{background:linear-gradient(to bottom,transparent,color-mix(in srgb,var(--scan) 10%,transparent) 50%,transparent);
+  height:18vh;inset:auto 0 auto 0;top:-20vh;animation:sweep 8s linear infinite;animation-delay:2s}
+@keyframes sweep{0%{transform:translateY(0)}100%{transform:translateY(140vh)}}
+.vig{background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55) 100%)}
+.flick{background:#fff;opacity:0;mix-blend-mode:overlay;animation:flick 5s steps(1) infinite}
+@keyframes flick{0%,100%{opacity:0}46%{opacity:.012}47%{opacity:0}48%{opacity:.02}49%{opacity:0}}
+
+@media (prefers-reduced-motion:reduce){
+  .sweep,.flick{display:none}
+  .cursor{animation:none}
+  pre#art span.r.boot{animation:none}
+  .letter h2 .ch,.letter .sub,.prompt{transition:none}
+}
+</style>
+</head>
+<body>
+<div class="bloom"></div>
+
+<section class="hero">
+  <div class="stage">
+    <pre id="art" aria-label="Ascii art of tulips" role="img"></pre>
+    <div class="prompt" id="prompt">&gt; scroll<span class="cursor"></span></div>
+  </div>
+  <div class="swatches" id="swatches" role="radiogroup" aria-label="Screen colour"></div>
+</section>
+
+<section class="letter">
+  <div>
+    <h2 id="iloveyou" aria-label="I love you"></h2>
+    <p class="sub" id="sub">// end of transmission</p>
+  </div>
+</section>
+
+<div class="crt scan"></div>
+<div class="crt sweep"></div>
+<div class="crt flick"></div>
+<div class="crt vig"></div>
+
+<script>
+const ART = {"cols":88,"rows":["                                                                                        ","                                                                                        ","                                                                                        ","                                                                                        ","                                                                                        ","                                                                                        ","                                           ,./:,.                                       ","                                   ,    ://:+/+:+//.                                    ","                             :,   =/:/:/,/:+:+/+:+//,,                                  ","                            2ee==*/:+//:+/=+=+=+=+=++:/,                                ","                            e2e*++:/,/:++=+==*==+=+=+=::.                               ","                             e2e*++///==e*e*e*e*e===e==:/                               ","                             e*2**++:/+e*e*2*e*e**===*++,,                              ","                              2e2*e++/**2e2e2e2e2e2**=e=+,                              ","                              *ee2*e==+ee2e2e2e2e2ee=*=e+/                              ","                               e2e2e2*=*22222222222e2*eee=/                             ","                               2*2e2ee*e*2e2e222e2e2ee*2**:,                            ","                                2e222*222e22222222222e2e2*=:                            ","                                :2e2e2*222e222e222e222*2ee/,                      ./:/::","                                 222222222222222222222222e*              =+/+:/:/:+/=+=+","              : .+/:,             e2e2e2e222e222e222e2e2e=              *+/=++:/:+/++=+=","             =*==/+//:/:/+         e2222222222222222222e=              :e+==*/+/++*=*=**","            +++*==:/:/:+/+:          2e2222222e222e2ee+:               //=+**+:++*+*=*=*","            =+=+*==/=+=+=++/            +222222222222                  ,::==e/++*=**e*e*","            +=+=+=+=+=+=+=//.                 e2ee                    ,*:./*+//=+*=e=e*e","            e*e=*=e=**e=*==//               /,e22*/                /:////,:==/==e*ee2*2e","    ,/      :e***2**=e*e*e++:              */++2e2++/             .,.:,/:+,/++/**e*ee2*2","  =/=++/++   *2*2e2e222e2ee++            :*/==*e2ee+=/            :.:,//++=:++==2e2e222e"," ::+/+//,::  /*2*2e2e2e2e2*=,,          +/:++=*2e2**++,:          ,:.::+/==*:/+*=ee2e2e2"," /=+=+=+/::.: +e2e2222222ee+//++:       //++**2e2e2**==:           ,:,++*=eee+=*ee222e22"," +/+=*==/+:. :  :2e2e2e2*=/=+=//,///+:,/:+:=*e*2e2ee**+/+           /::=*e*2ee=*e2e2e2e2","  ++e**=*++.,,     :2ee++.==e*=//,:=+://+/==ee2e222e2e*+/            /=+ee2e2ee*222e222e",":::++==*==::,/  ,::+/=++/.:*=*=+ ..:::/=+++==ee2e2e2*e== :://+ . :,   /*=*=*=*/+=ee2eee2",", :,//=/:/==+  //:+//+*+*,:*e**: ,/,/:==*==+ee2222222ee/ =/:/:,..,+/   :*=e===+,:,==e*2*",". ./,+:/./+:   :,//+/+++=+ +=*//:+:,///*=*+++ee2e2e2e2*: /++/:.. //+.       ==  ,,.,,+//",",    .:::,: ,.  /,++=/*: /:/=.,+*+::/+**e*e==*ee2e222e/   *==// .:*//       /=   /,:/++/","     . /         :/+::=*   ::  /,:: ./==+=+=+:/=+*e2ee    ,=/+/  .++:        =+   :///:/","    ,,,/. :     ..:,:,e=,.::+, .. ,:: /**+*//.///,222e    //+/=.  +,         ,*:   ,/,/,","     ,.+.,,  .   , ,..=*..  /: . . ../   +:/:: :,:*222:  +.::/:. .  ,+://:    ==   :.,.,","  .  .,+, / / . :., :.**,   =,.., . ,.    +,:,/ / +222*.:,.:+,      / :,:.    /*+,/:,,:,","  .    =.::,.      ,..=e.   /:,,. .        /  ./,:+2e2*..,.,,,      ,,.,...    e/,,, ,,:","  ,.  ,+..+,:     . , ee,   =..,: :     , :/, . . /2222.. ,.,,.     :,::/:/,, .+e.,.  ,.","   ,. .= ./=,         *2.   =, ,. .  . . . :,   . .222e:   ,,/.      ,,,:/::   :*/     ,","    . // .ee+   , .   2e:   e. ,: : .   ,...:.. , ,e222,..,..:. , .   . ,,:,,   2+.   . ","      // =*e/    .    =2   , . ,  ..     +/: .    .2e2e/     /.  . .    .. ,   ,**.     ","      /:**eee.  .     :*   :, +,  ,.    . ,,:,. . ,e222/  . .,/.  ,      ./,,   e*/     ","      .**e*eee.  .     +   // ,*/:.. ,.,..       ..e22e+     :,.  ..     , ::.  +2,     ",". .  /ee2e2e2ee.       :   .=/..e*/:e**+/,,     , ,e222+     ,/.  :     ..  ::  +e/     ","+=///e*e*e*e*e*=       . ,  :+:  /*,,**e*e=/     . 2e2e=     ,..  ..       ::/ .,2:     ","*=**e*2ee*2e2e2+.        .  :/=,/:+:,:**e*2e2=,   .e222+      .   ,.    ,/*=/ /:/e=     ","=**e*e*e*e*e*2*/         ,   +:/./:/,::/+**e*e*=   222e+          ..  .===/, /,:,e+     ","**e*2e2*2e2e2ee.         .  ./+, :/:*/++=/==e*e*2,.e222:          : :+*==+: ::::/**  .,.","=**e*e*e*e*e*e=          .   /:    ,+*+*++++/=+*=*+2e2e/           :/=++:,   ,.:,=+.  ./","e*e*2*2e2*2e2e*               .     *=*=*=*==+=+=+e2222,         ,=/+/+/,   . ,,:+*,    ","=*=eee*ee2e2e2+          .     .,+=*=*===*+=+=+=+==222e.       ::++/:+:, ..,.. ..++,    ","e*e*2e2e222e2e*     :,    ::==**e*+.e**=e**=*=*=*=e2222       ./++*://,   :.,.: ,/=,,   ","=**e*e*2*2ee*e+       ./:++=+*=*,.,/+*=*+*=*+=+=+=*2e2=        ..:,:,,     . .,. //:    ","e*e*e*2e2e2ee*=     ..***=*=*=/   ,:*=e=*=e=*=*+*=222e*       . ::/:,,/.    . / .,=: .  ","=e=**e*ee2*e*e:          :,/:       +*=*=*=*=*+++**2e2:        =,      ,      ,. ,// , .","e*e*2e2e2e2*2*,     =++:/.          +=*=**e=*==+**2e2e: +      :===.           ,,.+:.,, ","=*=**e*2e2*e*=      :+/==e**/:      .=+=+==*+=/++*e2e* .+,     ,:++=//           .:/.. .","*=e*e*2e2e2*e:      //=+=+***=*=+.  ./=/++*==+=+=*2e2=.,*/     ,:/+++/+:,         /:, . ","=*=**e*2e2*e=,      :/://+/+/+/+/+::./:::+/=+=/++e*2*+ /==       ,,//+:/:/:.      ,. .  ","*=**2e2e2ee*=       /::,:,:,/:/:/::,:::,::+/=+++**2e2:.+*=       .  ,/+://+:/     . . . ","+==*=ee2**=*,      ... .     . . . . . . ,://+/=+e*e=. =+=        ::  ./:::/,,          ","*=e*ee2ee*e+,       .                 . ..//+/++**2e* /==+        .:+ .:/:+//           "],"cat":["ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss","ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss","ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss","ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss","ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss","ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss","sssssssssssssssssssssssssssssssssssssssssssffffffsssssssssssssssssssssssssssssssssssssss","sssssssssssssssssssssssssssssssssssfssssffffffffffffssssssssssssssssssssssssssssssssssss","sssssssssssssssssssssssssssssffsssffffffffffffffffffffssssssssssssssssssssssssssssssssss","ssssssssssssssssssssssssssssgfffffffffffffffffffffffffffssssssssssssssssssssssssssssssss","ssssssssssssssssssssssssssssggfffffffffffffffffffffffffffsssssssssssssssssssssssssssssss","sssssssssssssssssssssssssssssfgffffffffffffffffffffffffffsssssssssssssssssssssssssssssss","sssssssssssssssssssssssssssssfffffffffffffffffffffffffffffssssssssssssssssssssssssssssss","ssssssssssssssssssssssssssssssffffffffffffffffffffffffffffssssssssssssssssssssssssssssss","ssssssssssssssssssssssssssssssffffffffffffffffffffffffffffssssssssssssssssssssssssssssss","sssssssssssssssssssssssssssssssffffffffffffffffffffffffffffsssssssssssssssssssssssssssss","sssssssssssssssssssssssssssssssfffffffffffffgggggggfffffffffssssssssssssssssssssssssssss","ssssssssssssssssssssssssssssssssfffffffgffgggggggggggfffffffssssssssssssssssssssssssssss","ssssssssssssssssssssssssssssssssfffffffgggggggggggggggffffffssssssssssssssssssssssffffff","sssssssssssssssssssssssssssssssssgfffffgggggggggggggggfffffssssssssssssssfffffffffffffff","ssssssssssssssfsfffffsssssssssssssfffgggggggggggggggggggffssssssssssssssffffffffffffffff","sssssssssssssfffffffffffffsssssssssfgggggggggggggggggggffssssssssssssssfffffffffffffffff","ssssssssssssfffffffffffffffssssssssssggggggggggggggggfffsssssssssssssssfffffffffffffffff","ssssssssssssffffffffffffffffssssssssssssgggggggggggggssssssssssssssssssfffffffffffffffff","ssssssssssssfffffffffffffffffsssssssssssssssssggggssssssssssssssssssssffffffffffffffffff","ssssssssssssfffffffffffffffffsssssssssssssssfffgggfssssssssssssssssfffffffffffffffffffff","ssssffssssssfffffffffffffffffssssssssssssssffffgggfffsssssssssssssffffffffffffffffffffff","ssffffffffsssffffffffffffffffssssssssssssfffffffggffffssssssssssssffffffffffffffffffffff","sffffffffffssfffffffgfffggffffssssssssssffffffffgggfffffssssssssssffffffffffffffffffffgf","sffffffffffffsffgfggggggggfffffffsssssssffffffffgggfffffsssssssssssfffffffffffffffffffgg","sfffffffffffsfssgggggggggffffffffffffffffffffffffgggfffffsssssssssssffffffffffffffffffff","ssffffffffffffsssssggggffffffffffffffffffffffffffgggfffffssssssssssssfffffffffffffgfffff","ffffgggfgfffffssfffffggfffffffffsffffffffffffffffgggffffsfffffsfsffsssffffffffffffgggggg","fsffffggfffffssffffffggfffffffffsfffffffffffffgggggggfffsfffffffffffsssfffffffggfffggggg","fsffffggfgggsssfffffffgfffsfggfffffffffffffffffffgggggffsfffffffsffffsssssssggssffffffff","fssssggggggsggssffffffggsgfggfffgffffffffffffffgggggggfsssfffffsfffffsssssssggsssfffffff","sssssgsgsssssssssffgggggsssggssggffsfffffffffffffgggggssssfffffssffffssssssssggsssffffff","ssssffgggsgsssssffffffggffffgfsgfsfffsfggggfffffffggggssssffffffssffsssssssssgggsssfffff","sssssffgffgssfsssfsfffggffssgfsfsfsfffsssfgfffsggfgggggssfffffggsgssffffffssssggsssfffff","ssfssffgfsgsfsfsfffsffggfsssgfffgsfsffssssgffffsgsgggggffffffgssssssfsffffssssggffffffff","ssgssssgffgffssssssfffggfsssggffgsgssssssssgssffffgggggffffffgssssssfffffffssssggfffsfff","ssggssfgffgggsssssfsfsggfsssgfffgsgsssssfsfgfsfsfsfggggffsfffgfsssssffffffffgsgggfffssff","sssggsggsggggsssssssssggfsssgfsfgsgssfsfsfsfgsssfsgggggfsssgfgfssssssfffffffsssggfsssssf","ssssgsggsggggsssgsgsssgggsssgfsggsgsgsssffffggfsfsgggggggfggfgfsgsgsssfsfffffsssggfsssfs","ssssssggsggggssssgssssggsssgsgsgssggsssssgggsgssssggggggsssssggssfsfssssfgsgsssfgggsssss","ssssssggggggggssgsssssggsssggsggssggssssgsgggggsgsggggggssgsfgggssgssssssggggsssgggsssss","ssssssgggggggggssgsssssgsssggsggggggsgggggsssssssgggggggsssssgggssggsssssgsgggssgggsssss","gsgssgggggggggggsssssssgsssggggggggggggggggsssssgsggggggsssssgggssgsssssggssggssgggsssss","ggggggggggggggggsssssssgsgssgggssgggggggggggsssssgsgggggsssssgggssggsssssssgggsggggsssss","gggggggggggggggggssssssssgssgggggggggggggggggggsssggggggssssssgsssggssssgggggsgggggsssss","ggggggggggggggggsssssssssgsssgggggggggggggggggggsssgggggssssssssssggssggggggsggggggsssss","ggggggggggggggggsssssssssgssggggsgggggggggggggggggggggggssssssssssgsgggggggsgggggggssggg","gggggggggggggggssssssssssgsssggssssgggggggggggggggggggggsssssssssssgggggggsssgggggggssgg","gggggggggggggggsssssssssssssssgsssssggggggggggggggggggggsssssssssggggggggsssgsggggggssss","gggggggggggggggssssssssssgsssssgggggggggggggggggggggggggsssssssgggggggggsgggggsgggggssss","gggggggggggggggsssssggssssgggggggggggggggggggggggggggggsssssssgggggggggsssgggggsgggggsss","gggggggggggggggsssssssgggggggggggggggggggggggggggggggggssssssssgggggggsssssgsgggsgggssss","gggggggggggggggsssssgggggggggggsssgggggggggggggggggggggsssssssgsggggggggssssgsgsggggsgss","gggggggggggggggssssssssssggggsssssssgggggggggggggggggggssssssssggssssssgssssssggsgggsgsg","gggggggggggggggsssssggggggssssssssssgggggggggggggggggggsgssssssgggggsssssssssssggggggggs","ggggggggggggggssssssggggggggggssssssggggggggggggggggggsgggsssssgggggggsssssssssssgggggsg","ggggggggggggggssssssggggggggggggggssggggggggggggggggggggggsssssggggggggggsssssssssgggsgs","ggggggggggggggssssssggggggggggggggggggggggggggggggggggsgggsssssssgggggggggggssssssggsgss","gggggggggggggsssssssggggggggggggggggggggggggggggggggggggggsssssssgssgggggggggsssssgsgsgs","gggggggggggggssssssgggsgsssssgsgsgsgsgsgsgggggggggggggsgggssssssssggssggggggggssssssssss","gggggggggggggsssssssgsssssssssssssssssgsgggggggggggggsggggssssssssgggsgggggggsssssssssss"]};
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- colourways ---------- */
+const THEMES = [
+ {n:'phosphor', c:'#39ff88', art:'#9dffc4', leaf:'#2fd37a', txt:'#39ff88', glow:'#00ff66', bg:'#020604', scan:'#00ff66'},
+ {n:'ice',      c:'#45e6ff', art:'#a6f4ff', leaf:'#29b8d6', txt:'#45e6ff', glow:'#00d0ff', bg:'#020609', scan:'#00d0ff'},
+ {n:'magenta',  c:'#ff3ec9', art:'#ff9ce6', leaf:'#d12ba0', txt:'#ff5fd2', glow:'#ff1fb8', bg:'#080208', scan:'#ff1fb8'},
+ {n:'amber',    c:'#ffa81f', art:'#ffd28a', leaf:'#d98a10', txt:'#ffa81f', glow:'#ff8a00', bg:'#080400', scan:'#ff8a00'},
+ {n:'violet',   c:'#a77bff', art:'#cdb5ff', leaf:'#7f55e0', txt:'#b08cff', glow:'#8f5cff', bg:'#05020a', scan:'#8f5cff'},
+ {n:'ghost',    c:'#e8f1ee', art:'#ffffff', leaf:'#a9b8b3', txt:'#dfe9e6', glow:'#bcd0ca', bg:'#030404', scan:'#cfe0da'}
+];
+const root = document.documentElement;
+const sw = document.getElementById('swatches');
+function applyTheme(i){
+  const t = THEMES[i];
+  for (const k of ['art','leaf','txt','glow','bg','scan']) root.style.setProperty('--'+k, t[k]);
+  document.querySelector('meta[name=theme-color]').content = t.bg;
+  [...sw.children].forEach((b,j)=>b.setAttribute('aria-checked', j===i));
+  try{localStorage.setItem('tulip-theme', i)}catch(e){}
+}
+THEMES.forEach((t,i)=>{
+  const b=document.createElement('button');
+  b.className='sw'; b.type='button'; b.setAttribute('role','radio'); b.setAttribute('aria-label',t.n);
+  b.style.setProperty('--c',t.c); b.innerHTML='<span></span>';
+  b.onclick=()=>applyTheme(i); sw.appendChild(b);
+});
+let saved=0; try{saved=+localStorage.getItem('tulip-theme')||0}catch(e){}
+applyTheme(saved<THEMES.length?saved:0);
+
+/* ---------- build the art (full height reserved up front) ---------- */
+const pre = document.getElementById('art');
+pre.style.setProperty('--cols', ART.cols);
+pre.style.setProperty('--rows', ART.rows.length);
+const esc = c => c==='<'?'&lt;':c==='>'?'&gt;':c==='&'?'&amp;':c;
+const rowEls = ART.rows.map((row,y)=>{
+  const cat = ART.cat[y]; let html='', run='', k='';
+  for(let x=0;x<row.length;x++){
+    const kk = cat[x]==='f'?'f':'g';
+    if(kk!==k){ if(run) html+=`<i class="${k}">${run}</i>`; run=''; k=kk; }
+    run += esc(row[x]);
+  }
+  if(run) html+=`<i class="${k}">${run}</i>`;
+  const s=document.createElement('span'); s.className='r'; s.innerHTML=html; pre.appendChild(s); return s;
+});
+
+/* ---------- grow-in: ~5s, bottom -> top, ease-out, after an empty beat ---------- */
+const prompt = document.getElementById('prompt');
+const N = rowEls.length, BEAT = 900, DUR = 5000;
+function finishGrowth(){ rowEls.forEach(r=>r.classList.add('on')); prompt.classList.add('show'); }
+if (reduce){ finishGrowth(); }
+else {
+  let shown = 0, t0 = null;
+  const ease = p => 1 - Math.pow(1-p, 2.2);
+  const first = (()=>{ let y=0; while(y<N && !ART.rows[y].trim()) y++; return y; })();
+  const lastBlank = (()=>{ let y=N-1; while(y>0 && !ART.rows[y].trim()) y--; return y; })();
+  const span = lastBlank - first + 1;
+  function frame(ts){
+    if(t0===null) t0=ts;
+    const t = ts - t0 - BEAT;
+    if(t>0){
+      const p = Math.min(1, t/DUR);
+      const want = Math.ceil(ease(p) * span);
+      while(shown < want){
+        const y = lastBlank - shown;               // bottom first
+        const el = rowEls[y]; el.classList.add('on','boot'); shown++;
+      }
+      // rows above the last blank row that are empty need no reveal; reveal everything at the end
+      if(p>=1){ finishGrowth(); return; }
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  setTimeout(()=>prompt.classList.add('show'), BEAT+DUR-400);
+}
+
+/* ---------- scroll -> "I love you" ---------- */
+const h2 = document.getElementById('iloveyou'), sub = document.getElementById('sub');
+[...'I love you'].forEach((c,i)=>{
+  const s=document.createElement('span'); s.className='ch'; s.setAttribute('aria-hidden','true');
+  s.textContent = c===' '?'\u00a0':c;
+  s.style.transitionDelay = reduce?'0s':(i*0.14)+'s'; h2.appendChild(s);
+});
+let revealed=false;
+const reveal = ()=>{
+  if(revealed) return; revealed=true;
+  h2.classList.add('in'); sub.classList.add('in'); prompt.classList.add('gone'); prompt.classList.remove('show');
+};
+new IntersectionObserver(es=>{ if(es.some(e=>e.isIntersecting)) reveal(); },{threshold:.55}).observe(h2);
+</script>
+</body>
+</html>
